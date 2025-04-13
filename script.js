@@ -1,16 +1,38 @@
-document.getElementById("debt-form").addEventListener("submit", function (e) { e.preventDefault();
+document.addEventListener("DOMContentLoaded", () => { const form = document.getElementById("debt-form"); const debtList = document.getElementById("debt-list"); const reminder = document.getElementById("reminder");
 
-const name = document.getElementById("name").value; const amount = document.getElementById("amount").value; const dueDate = document.getElementById("due-date").value;
+// Load saved data const savedDebts = JSON.parse(localStorage.getItem("debts")) || []; savedDebts.forEach(debt => addDebtToDOM(debt)); checkReminders();
 
-const listItem = document.createElement("li"); listItem.textContent = ${name} owes Rs. ${amount} (Due: ${dueDate}); document.getElementById("debt-list").appendChild(listItem);
+form.addEventListener("submit", function (e) { e.preventDefault();
 
+const name = document.getElementById("name").value;
+const amount = document.getElementById("amount").value;
+const dueDate = document.getElementById("due-date").value;
+
+const newDebt = { name, amount, dueDate };
+savedDebts.push(newDebt);
+localStorage.setItem("debts", JSON.stringify(savedDebts));
+
+addDebtToDOM(newDebt);
 checkReminders();
+form.reset();
 
-// Clear inputs document.getElementById("debt-form").reset(); });
+});
 
-function checkReminders() { const now = new Date(); const items = document.querySelectorAll("#debt-list li"); let alertText = "";
+function addDebtToDOM(debt) { const listItem = document.createElement("li"); listItem.textContent = ${debt.name} owes Rs. ${debt.amount} (Due: ${debt.dueDate}); debtList.appendChild(listItem); }
 
-items.forEach(item => { const text = item.textContent; const dueMatch = text.match(/Due: (\d{4}-\d{2}-\d{2})/); if (dueMatch) { const dueDate = new Date(dueMatch[1]); const diffTime = dueDate - now; const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); if (diffDays <= 2 && diffDays >= 0) { alertText += ${text}\n; } } });
+function checkReminders() { const now = new Date(); let alertText = "";
 
-document.getElementById("reminder").textContent = alertText ? Upcoming dues:\n${alertText} : ""; }
+savedDebts.forEach(debt => {
+  const dueDate = new Date(debt.dueDate);
+  const diffTime = dueDate - now;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  if (diffDays <= 2 && diffDays >= 0) {
+    alertText += `${debt.name} owes Rs. ${debt.amount} (Due: ${debt.dueDate})\n`;
+  }
+});
+
+reminder.textContent = alertText ? `Upcoming dues:\n${alertText}` : "";
+
+} });
+
 
